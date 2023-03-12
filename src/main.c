@@ -2,9 +2,10 @@
 #include <stdlib.h>
 
 #include "screen/screen.h"
+#include "snake/snake.h"
 
 int main(int argc, char **argv)
 {
-    get_terminal_dimensions();
+    initialise_snake();
     return 0;
 }
