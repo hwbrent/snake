@@ -11,6 +11,13 @@ struct screen {
 };
 struct screen screen;
 
+struct snake {
+    int* row_coords;
+    int* col_coords;
+};
+
+struct snake snake;
+
 void init_screen() {
     // See https://stackoverflow.com/a/1022961
     struct winsize w;
@@ -26,13 +33,6 @@ void init_screen() {
 void clear_stdout() {
     system("clear");
 }
-
-struct snake {
-    int* row_coords;
-    int* col_coords;
-};
-
-struct snake snake;
 
 void init_snake() {
     // Assume init_screen() has been called.
