@@ -26,6 +26,11 @@ int ind(row, col) {
     return (screen.cols * row) + col;
 }
 
+// Sets the pixel in [row, col] with 'value'.
+void set_pixel(row, col, value) {
+    screen.pixels[ind(row,col)] = value;
+}
+
 void init_screen() {
     // See https://stackoverflow.com/a/1022961
     struct winsize w;
@@ -45,8 +50,7 @@ void init_screen() {
                 (i == 0 || i == screen.rows-1) ||
                 (j == 0 || j == screen.cols - 1);
 
-            int index = ind(i, j);
-            screen.pixels[index] = is_border ? '#' : ' ';
+            set_pixel(i, j, is_border ? '#' : ' ');
         }
     }
 }
