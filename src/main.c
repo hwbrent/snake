@@ -60,6 +60,27 @@ void clear_stdout() {
 }
 
 void print_screen() {
+    // Reset the value of any pixel that isn't a border.
+    for (int i = 1; i < screen.rows-1; i++) {
+        for (int j = 1; j < screen.cols-1; j++) {
+            set_pixel(i, j, ' ');
+        }
+    }
+
+    // Set snake positions.
+    for (int i = 0; i < screen.total_pixel_count; i++) {
+        // printf("%c", screen.pixels[i]);
+        int row_index = snake.row_coords[i];
+        int col_index = snake.col_coords[i];
+
+        // Snake is not yet this long, so break out of loop.
+        if (row_index == 0 && col_index == 0) {
+            break;
+        }
+
+        set_pixel(row_index, col_index, 'S');
+    }
+
     for (int i = 0; i < screen.total_pixel_count; i++) {
         printf("%c", screen.pixels[i]);
     }
