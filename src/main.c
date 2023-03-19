@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
+#include <stdbool.h>
 
 struct screen {
     int rows;
@@ -18,6 +19,13 @@ struct snake {
 
 struct snake snake;
 
+// Converts a row,col coordinate to an absolute screen coordinate.
+// e.g. if the screen is 10 rows by 108 cols, then the screen
+// coordinate [3, 22] converts to 346
+int ind(row, col) {
+    return (screen.cols * row) + col;
+}
+
 void init_screen() {
     // See https://stackoverflow.com/a/1022961
     struct winsize w;
@@ -28,10 +36,30 @@ void init_screen() {
     screen.total_pixel_count = screen.rows * screen.cols;
 
     screen.pixels = (char*)malloc(screen.total_pixel_count * sizeof(char));
+
+    // Initialise the screen borders.
+    for (int i = 0; i < screen.rows; i++) {
+        for (int j = 0; j < screen.cols; j++) {
+
+            bool is_border = 
+                (i == 0 || i == screen.rows-1) ||
+                (j == 0 || j == screen.cols - 1);
+
+            int index = ind(i, j);
+            screen.pixels[index] = is_border ? '#' : ' ';
+        }
+    }
 }
 
 void clear_stdout() {
     system("clear");
+}
+
+void print_screen() {
+    for (int i = 0; i < screen.total_pixel_count; i++) {
+        printf("%c", screen.pixels[i]);
+    }
+    printf("\n");
 }
 
 void init_snake() {
@@ -52,17 +80,13 @@ void free_all() {
     free(snake.col_coords);
 }
 
-int main (int argc, char **argv)
-{
-    printf("\n\n");
+int main (int argc, char **argv) {
 
     init_screen();
-    printf("screen: %d rows x %d cols\n", screen.rows, screen.cols);
-
     init_snake();
-    printf("snake starting position: row %d, col %d\n", snake.row_coords[0], snake.col_coords[0]);
+
+    print_screen();
 
     free_all();
-    printf("\n\n");
     return 0;
 }
