@@ -49,13 +49,21 @@ void init_screen() {
 
     // Initialise the screen borders.
     for (int i = 0; i < screen.rows; i++) {
-        for (int j = 0; j < screen.cols; j++) {
 
-            bool is_border = 
-                (i == 0 || i == screen.rows-1) ||
-                (j == 0 || j == screen.cols - 1);
+        // If it's the first or last row, every pixel will be a hashtag.
+        if (i == 0 || i == screen.rows - 1) {
+            for (int j = 0; j < screen.cols; j++) {
+                set_pixel(i, j, '#');
+            }
 
-            set_pixel(i, j, is_border ? '#' : ' ');
+        // Else, only the first and last pixels will be hashtags. The rest
+        // will be empty space.
+        } else {
+            set_pixel(i, 0, '#');
+            for (int j = 1; j < screen.cols-2; j++) {
+                set_pixel(i, screen.cols-1, ' ');
+            }
+            set_pixel(i, screen.cols-1, '#');
         }
     }
 }
@@ -146,11 +154,13 @@ int main (int argc, char **argv) {
     init_screen();
     init_snake();
 
-    while (true) {
-        print_screen();
-        move_snake();
-        msleep(1000);
-    }
+    print_screen();
+
+    // while (true) {
+    //     print_screen();
+    //     move_snake();
+    //     msleep(1000);
+    // }
 
     free_all();
     return 0;
