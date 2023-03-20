@@ -118,16 +118,41 @@ void init_snake() {
 }
 
 void move_snake() {
-    for (int i = 0; i < screen.total_pixel_count; i++) {
-        int row_coord = snake.row_coords[i];
-        int col_coord = snake.col_coords[i];
+    // The overall premise is to make the current segment equal to
+    // the second most recent position of the preceding segment.
 
-        if (!row_coord && !col_coord) {
-            return;
+    int prev[2] = { snake.row_coords[0], snake.col_coords[0] };
+
+    for (int i = 0; i < screen.total_pixel_count; i++) {
+
+        if (i == 0) {
+            // This is the head of the snake. Move it according to
+            // 'snake.direction'.
+            snake.row_coords[i] += snake.direction[0];
+            snake.col_coords[i] += snake.direction[1];
+            continue;
         }
 
-        snake.row_coords[i] += snake.direction[0];
-        snake.col_coords[i] += snake.direction[1];
+        // Else, this is NOT the head of the snake.
+
+        bool segment_is_undefined = 
+            snake.row_coords[i] == 0 &&
+            snake.col_coords[i] == 0;
+
+        if (segment_is_undefined) {
+            break;
+        }
+
+        // Save what this segment's coordinates USED to be.
+        int temp[2] = { snake.row_coords[i], snake.col_coords[i] };
+
+        // Set this segment's coords the same as 'prev'.
+        snake.row_coords[i] = prev[0];
+        snake.col_coords[i] = prev[1];
+
+        // Update 'prev'.
+        prev[0] = temp[0];
+        prev[1] = temp[1];
     }
 }
 
