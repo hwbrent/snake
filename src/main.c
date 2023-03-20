@@ -4,6 +4,10 @@
 #include <sys/ioctl.h>
 #include <stdbool.h>
 
+// For 'msleep'
+#include <time.h>
+#include <errno.h>
+
 struct screen {
     int rows;
     int cols;
@@ -15,6 +19,7 @@ struct screen screen;
 struct snake {
     int* row_coords;
     int* col_coords;
+    int direction[2];
 };
 
 struct snake snake;
@@ -60,6 +65,8 @@ void clear_stdout() {
 }
 
 void print_screen() {
+    clear_stdout();
+
     // Reset the value of any pixel that isn't a border.
     for (int i = 1; i < screen.rows-1; i++) {
         for (int j = 1; j < screen.cols-1; j++) {
@@ -96,6 +103,36 @@ void init_snake() {
     // Set initial position in middle of screen.
     snake.row_coords[0] = screen.rows / 2;
     snake.col_coords[0] = screen.cols / 2;
+
+    // Set the initial movement direction of the snake (left).
+    snake.direction[0] = 0;
+    snake.direction[1] = -1;
+}
+
+void move_snake() {
+    for (int i = 0; i < screen.total_pixel_count; i++) {
+        int row_coord = snake.row_coords[i];
+        int col_coord = snake.col_coords[i];
+
+        if (!row_coord && !col_coord) {
+            return;
+        }
+
+        snake.row_coords[i] += snake.direction[0];
+        snake.col_coords[i] += snake.direction[1];
+    }
+}
+
+// Copied from https://stackoverflow.com/a/1157217
+int msleep(long msec)
+{
+    struct timespec ts;
+    int res;
+    if (msec < 0) { errno = EINVAL; return -1; }
+    ts.tv_sec = msec / 1000;
+    ts.tv_nsec = (msec % 1000) * 1000000;
+    do { res = nanosleep(&ts, &ts); } while (res && errno == EINTR);
+    return res;
 }
 
 void free_all() {
@@ -106,11 +143,14 @@ void free_all() {
 }
 
 int main (int argc, char **argv) {
-
     init_screen();
     init_snake();
 
-    print_screen();
+    while (true) {
+        print_screen();
+        move_snake();
+        msleep(1000);
+    }
 
     free_all();
     return 0;
