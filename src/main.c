@@ -4,6 +4,9 @@
 #include <sys/ioctl.h>
 #include <stdbool.h>
 
+// For threading.
+#include <pthread.h>
+
 // For 'msleep'
 #include <time.h>
 #include <errno.h>
@@ -175,17 +178,31 @@ void free_all() {
     free(snake.col_coords);
 }
 
+void *myThreadFun(void *vargp) {
+    msleep(3000);
+    printf("Printing GeeksQuiz from Thread \n");
+    return NULL;
+}
+
 int main (int argc, char **argv) {
     init_screen();
     init_snake();
 
-    print_screen();
+    // print_screen();
 
     // while (true) {
-    //     print_screen();
-    //     move_snake();
-    //     msleep(1000);
+        // print_screen();
+        // move_snake();
+        // msleep(1000);
     // }
+
+    pthread_t thread_id;
+    printf("Before Thread\n");
+    pthread_create(&thread_id, NULL, myThreadFun, NULL);
+
+    msleep(500);
+    pthread_cancel(thread_id);
+    printf("After Thread\n");
 
     free_all();
     return 0;

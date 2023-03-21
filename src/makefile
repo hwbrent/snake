@@ -1,5 +1,5 @@
 main: main.c
-	@gcc main.c
+	@gcc main.c -lpthread
 	@./a.out
 	@make clean
 
