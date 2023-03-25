@@ -7,6 +7,9 @@
 #include <time.h>
 #include <errno.h>
 
+// For threading.
+#include <pthread.h>
+
 int c;
 
 struct screen {
@@ -38,6 +41,7 @@ void init_screen() {
     /* ncurses initialisation details. */
     initscr();
     cbreak();
+    // halfdelay(3); // 0.3s timeout
     keypad(stdscr, TRUE);
     noecho();
 
@@ -174,15 +178,57 @@ int msleep(long msec)
     return res;
 }
 
+void *getch_thread_fn(void *vargp) {
+    while (1) {
+        c = getch();
+        switch (c) {
+            case 'w':
+            case KEY_UP:
+                snake.direction[0] = -1;
+                snake.direction[1] = 0;
+                break;
+
+            case 'a':
+            case KEY_LEFT:
+                snake.direction[0] = 0;
+                snake.direction[1] = -1;
+                break;
+
+            case 's':
+            case KEY_DOWN:
+                snake.direction[0] = 1;
+                snake.direction[1] = 0;
+                break;
+
+            case 'd':
+            case KEY_RIGHT:
+                snake.direction[0] = 0;
+                snake.direction[1] = 1;
+                break;
+
+            default:
+                break;
+        }
+    }
+}
+
 int main(int argc, char **argv) {
     init_screen();
     init_snake();
 
+    pthread_t ptid;
+    pthread_create(&ptid, NULL, &getch_thread_fn, NULL);
+
     for (int i = 0; i < 20; i++) {
+        if (c == 'q') {
+            break;
+        }
+
         print_screen();
         move_snake();
-        msleep(250);
+        msleep(125);
     }
+    pthread_cancel(ptid);
 
     getch();
 
