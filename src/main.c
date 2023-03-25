@@ -3,6 +3,10 @@
 #include <stdbool.h>
 #include <ncurses.h>
 
+// For 'msleep'
+#include <time.h>
+#include <errno.h>
+
 int c;
 
 struct screen {
@@ -11,6 +15,12 @@ struct screen {
     int total_pixel_count;
     char* pixels;
 } screen;
+
+struct snake {
+    int* row_coords;
+    int* col_coords;
+    int direction[2];
+} snake;
 
 // Converts a row,col coordinate to an absolute screen coordinate.
 // e.g. if the screen is 10 rows by 108 cols, then the screen
@@ -65,6 +75,19 @@ void print_screen() {
         }
     }
 
+    // Set snake positions.
+    for (int i = 0; i < screen.total_pixel_count; i++) {
+        int row_index = snake.row_coords[i];
+        int col_index = snake.col_coords[i];
+
+        // Snake is not yet this long, so break out of loop.
+        if (row_index == 0 && col_index == 0) {
+            break;
+        }
+
+        set_pixel(row_index, col_index, 'S');
+    }
+
     // Now actually print screen.
     for (int i = 0; i < screen.rows; i++) {
         for (int j = 0; j < screen.cols; j++) {
@@ -80,46 +103,90 @@ void terminate_screen() {
     free(screen.pixels);
 }
 
-int handle_key_press() {
-    c = getch();
+void init_snake() {
+    snake.row_coords = (int*)malloc(screen.total_pixel_count * sizeof(int));
+    snake.col_coords = (int*)malloc(screen.total_pixel_count * sizeof(int));
 
-    switch (c) {
-        case 'q':
-            return 1;
+    // Set initial position in middle of screen.
+    snake.row_coords[0] = screen.rows / 2;
+    snake.col_coords[0] = screen.cols / 2;
+    snake.row_coords[1] = screen.rows / 2;
+    snake.col_coords[1] = (screen.cols / 2) + 1;
 
-        case 'w':
-        case KEY_UP:
-            printw("Pressed up\n");
+    // Set the initial movement direction of the snake (left).
+    snake.direction[0] = 0;
+    snake.direction[1] = -1;
+}
+
+void move_snake() {
+    // The overall premise is to make the current segment equal to
+    // the second most recent position of the preceding segment.
+
+    int prev[2] = { snake.row_coords[0], snake.col_coords[0] };
+
+    for (int i = 0; i < screen.total_pixel_count; i++) {
+
+        if (i == 0) {
+            // This is the head of the snake. Move it according to
+            // 'snake.direction'.
+            snake.row_coords[i] += snake.direction[0];
+            snake.col_coords[i] += snake.direction[1];
+            continue;
+        }
+
+        // Else, this is NOT the head of the snake.
+
+        bool segment_is_undefined = 
+            snake.row_coords[i] == 0 &&
+            snake.col_coords[i] == 0;
+
+        if (segment_is_undefined) {
             break;
+        }
 
-        case 'a':
-        case KEY_LEFT:
-            printw("Pressed left\n");
-            break;
+        // Save what this segment's coordinates USED to be.
+        int temp[2] = { snake.row_coords[i], snake.col_coords[i] };
 
-        case 's':
-        case KEY_DOWN:
-            printw("Pressed down\n");
-            break;
+        // Set this segment's coords the same as 'prev'.
+        snake.row_coords[i] = prev[0];
+        snake.col_coords[i] = prev[1];
 
-        case 'd':
-        case KEY_RIGHT:
-            printw("Pressed right\n");
-            break;
-
-        default:
-            break;
+        // Update 'prev'.
+        prev[0] = temp[0];
+        prev[1] = temp[1];
     }
+}
 
-    return 0;
+void terminate_snake() {
+    free(snake.row_coords);
+    free(snake.col_coords);
+}
+
+// Copied from https://stackoverflow.com/a/1157217
+int msleep(long msec)
+{
+    struct timespec ts;
+    int res;
+    if (msec < 0) { errno = EINVAL; return -1; }
+    ts.tv_sec = msec / 1000;
+    ts.tv_nsec = (msec % 1000) * 1000000;
+    do { res = nanosleep(&ts, &ts); } while (res && errno == EINTR);
+    return res;
 }
 
 int main(int argc, char **argv) {
     init_screen();
+    init_snake();
 
-    print_screen();
+    for (int i = 0; i < 20; i++) {
+        print_screen();
+        move_snake();
+        msleep(250);
+    }
+
     getch();
 
     terminate_screen();
+    terminate_snake();
     return 0;
 }
