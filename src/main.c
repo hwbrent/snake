@@ -11,6 +11,7 @@
 #include <pthread.h>
 
 int c;
+pthread_t ptid;
 
 struct screen {
     int rows;
@@ -264,19 +265,17 @@ void init_game() {
     init_screen();
     init_snake();
     init_food();
+    pthread_create(&ptid, NULL, &getch_thread_fn, NULL);
 }
 
 void terminate_game() {
     terminate_screen();
     terminate_snake();
+    pthread_cancel(ptid);
 }
 
 void run_game() {
     // init_game();
-
-    pthread_t ptid;
-    pthread_create(&ptid, NULL, &getch_thread_fn, NULL);
-
     for (int i = 0; i < 20; i++) {
         if (c == 'q') {
             break;
@@ -286,10 +285,7 @@ void run_game() {
         move_snake();
         msleep(125);
     }
-    pthread_cancel(ptid);
-
     getch();
-
     // terminate_game();
 }
 
