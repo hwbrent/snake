@@ -25,6 +25,11 @@ struct snake {
     int direction[2];
 } snake;
 
+struct food {
+    int row;
+    int col;
+} food;
+
 // Converts a row,col coordinate to an absolute screen coordinate.
 // e.g. if the screen is 10 rows by 108 cols, then the screen
 // coordinate [3, 22] converts to 346
@@ -92,6 +97,9 @@ void print_screen() {
         set_pixel(row_index, col_index, 'S');
     }
 
+    // Set food position.
+    set_pixel(food.row, food.col, 'F');
+
     // Now actually print screen.
     for (int i = 0; i < screen.rows; i++) {
         for (int j = 0; j < screen.cols; j++) {
@@ -114,8 +122,6 @@ void init_snake() {
     // Set initial position in middle of screen.
     snake.row_coords[0] = screen.rows / 2;
     snake.col_coords[0] = screen.cols / 2;
-    snake.row_coords[1] = screen.rows / 2;
-    snake.col_coords[1] = (screen.cols / 2) + 1;
 
     // Set the initial movement direction of the snake (left).
     snake.direction[0] = 0;
@@ -166,6 +172,48 @@ void terminate_snake() {
     free(snake.col_coords);
 }
 
+void init_food() {
+    // Randomly generate a set of coordinates.
+    // The coordinate cannot lie on a border or in the centre of the screen.
+
+    srand(time(NULL));
+}
+
+// See https://stackoverflow.com/a/1190911
+void place_food() {
+    // // Row coordinate has to be in this range (both ends inclusive)
+    // int row_coord[] = { 1, screen.rows - 2};
+
+    // // Column coordinate has to be in this range (both ends inclusive)
+    // int col_coord[] = { 1, screen.cols - 2};
+
+    int row_coord;
+    int col_coord;
+    bool found_valid_coords;
+
+    while (true) {
+        row_coord = rand() % (screen.rows-2) + 1;
+        col_coord = rand() % (screen.cols-2) + 1;
+
+        // Check if the snake is already occupying the randomly-generated
+        // space.
+        found_valid_coords = true;
+        for (int i = 0; i < screen.total_pixel_count; i++) {
+            if (snake.row_coords[i] == row_coord && snake.col_coords[i] == col_coord) {
+                found_valid_coords = false;
+                break;
+            }
+        }
+
+        if (found_valid_coords) {
+            break;
+        }
+    }
+
+    food.row = row_coord;
+    food.col = col_coord;
+}
+
 // Copied from https://stackoverflow.com/a/1157217
 int msleep(long msec)
 {
@@ -212,9 +260,19 @@ void *getch_thread_fn(void *vargp) {
     }
 }
 
-int main(int argc, char **argv) {
+void init_game() {
     init_screen();
     init_snake();
+    init_food();
+}
+
+void terminate_game() {
+    terminate_screen();
+    terminate_snake();
+}
+
+void run_game() {
+    // init_game();
 
     pthread_t ptid;
     pthread_create(&ptid, NULL, &getch_thread_fn, NULL);
@@ -232,7 +290,17 @@ int main(int argc, char **argv) {
 
     getch();
 
-    terminate_screen();
-    terminate_snake();
+    // terminate_game();
+}
+
+int main(int argc, char **argv) {
+    init_game();
+
+    place_food();
+
+    print_screen();
+    getch();
+
+    terminate_game();
     return 0;
 }
