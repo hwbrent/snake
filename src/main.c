@@ -136,20 +136,14 @@ void move_snake() {
     // The overall premise is to make the current segment equal to
     // the second most recent position of the preceding segment.
 
-    int prev[2] = { snake.row_coords[0], snake.col_coords[0] };
+    int prev[2] = { *(snake.head[0]), *(snake.head[1]) };
 
-    for (int i = 0; i < screen.total_pixel_count; i++) {
+    // First move snake head according to 'snake.direction'.
+    *(snake.head[0]) += snake.direction[0];
+    *(snake.head[1]) += snake.direction[1];
 
-        if (i == 0) {
-            // This is the head of the snake. Move it according to
-            // 'snake.direction'.
-            snake.row_coords[i] += snake.direction[0];
-            snake.col_coords[i] += snake.direction[1];
-            continue;
-        }
-
-        // Else, this is NOT the head of the snake.
-
+    // Move each of the rest of the snake segments.
+    for (int i = 1; i < screen.total_pixel_count; i++) {
         bool segment_is_undefined = 
             snake.row_coords[i] == 0 &&
             snake.col_coords[i] == 0;
@@ -279,7 +273,7 @@ void terminate_game() {
 
 void run_game() {
     // init_game();
-    for (int i = 0; i < 20; i++) {
+    while (true) {
         if (c == 'q') {
             break;
         }
@@ -295,14 +289,9 @@ void run_game() {
 int main(int argc, char **argv) {
     init_game();
 
-    // place_food();
-    // print_screen();
+    run_game();
 
-    printw("[%d,%d]", *(snake.head[0]), *(snake.head[1]));
-    move_snake();
-    printw("[%d,%d]", *(snake.head[0]), *(snake.head[1]));
-
-    getch();
+    // getch();
     terminate_game();
     return 0;
 }
