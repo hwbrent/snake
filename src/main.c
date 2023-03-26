@@ -23,6 +23,7 @@ struct screen {
 struct snake {
     int* row_coords;
     int* col_coords;
+    int* head[2];
     int direction[2];
 } snake;
 
@@ -119,6 +120,8 @@ void terminate_screen() {
 void init_snake() {
     snake.row_coords = (int*)malloc(screen.total_pixel_count * sizeof(int));
     snake.col_coords = (int*)malloc(screen.total_pixel_count * sizeof(int));
+    snake.head[0] = &(snake.row_coords[0]);
+    snake.head[1] = &(snake.col_coords[0]);
 
     // Set initial position in middle of screen.
     snake.row_coords[0] = screen.rows / 2;
@@ -292,11 +295,14 @@ void run_game() {
 int main(int argc, char **argv) {
     init_game();
 
-    place_food();
+    // place_food();
+    // print_screen();
 
-    print_screen();
+    printw("[%d,%d]", *(snake.head[0]), *(snake.head[1]));
+    move_snake();
+    printw("[%d,%d]", *(snake.head[0]), *(snake.head[1]));
+
     getch();
-
     terminate_game();
     return 0;
 }
