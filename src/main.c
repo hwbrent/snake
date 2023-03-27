@@ -105,7 +105,6 @@ void init_game() {
     init_snake();
     init_food();
 }
-void run_game() {}
 void terminate_game() {
     terminate_screen();
     terminate_snake();
@@ -114,11 +113,16 @@ void terminate_game() {
 
 /* -------------------------------------------------- */
 
+void run_game() {
+    print_screen();
+    getch();
+}
+
+/* -------------------------------------------------- */
+
 int main(int argc, char **argv) {
     init_game();
-
     run_game();
-
     terminate_game();
     return 0;
 }
