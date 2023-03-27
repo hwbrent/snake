@@ -19,7 +19,7 @@ struct screen {
 
 struct snake {
     pixel* segments;
-    pixel head;
+    pixel* head;
     bool should_add_seg;
 } snake;
 
@@ -90,8 +90,18 @@ void print_screen() {
 
 /* -------------------------------------------------- */
 
-void init_snake() {} 
-void terminate_snake() {}
+void init_snake() {
+    snake.segments = (pixel*)malloc(sizeof(pixel));
+    snake.head = &(snake.segments[0]);
+    *snake.head = create_pixel(screen.rows / 2, screen.cols / 2, 'S');
+    set_pixel(
+        ind((*snake.head).row, (*snake.head).col),
+        *snake.head
+    );
+} 
+void terminate_snake() {
+    free(snake.segments);
+}
 
 /* -------------------------------------------------- */
 
