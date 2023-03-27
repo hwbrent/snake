@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <ncurses.h>
+#include <time.h>
 
 typedef struct pixel {
     int row;
@@ -23,9 +24,7 @@ struct snake {
     bool should_add_seg;
 } snake;
 
-struct food {
-    pixel coord;
-} food;
+pixel food;
 
 /* -------------------------------------------------- */
 
@@ -58,7 +57,7 @@ void init_screen() {
 
     screen.total_pixels = screen.rows * screen.cols;
 
-    screen.pixels = (pixel*)calloc(screen.total_pixels, sizeof(pixel));
+    screen.pixels = (pixel*)malloc(screen.total_pixels * sizeof(pixel));
     for (int i = 0; i < screen.rows; i++) {
         bool is_top_bottom_border =
             (i == 0) || (i == screen.rows-1);
@@ -78,6 +77,7 @@ void init_screen() {
 void terminate_screen() {
     endwin();
     free(screen.pixels);
+    free(screen.empty_pixels);
 }
 
 void print_screen() {
@@ -105,8 +105,41 @@ void terminate_snake() {
 
 /* -------------------------------------------------- */
 
-void init_food() {}
+void init_food() {
+    srand(time(NULL));
+    food.value = 'F';
+}
 void terminate_food() {}
+
+void place_food() {
+    int empty_count = 0;
+    screen.empty_pixels = malloc(0);
+
+    for (int i = 1; i < screen.rows-1; i++) {
+        for (int j = 1; j < screen.cols-1; j++) {
+            int index = ind(i,j);
+            if (get_pixel(index).value != ' ') {
+                continue;
+            }
+
+            empty_count++;
+
+            // Increment the size of the array.
+            screen.empty_pixels = (int*)realloc(screen.empty_pixels, empty_count * sizeof(int));
+
+            screen.empty_pixels[empty_count-1] = index;
+        }
+    }
+
+    // Pick a random value from screen.empty_pixels
+    int random_index = rand() % (empty_count-1) + 0;
+    pixel prev_pixel = get_pixel(random_index);
+
+    food.row = prev_pixel.row;
+    food.col = prev_pixel.col;
+
+    set_pixel(random_index, food);
+}
 
 /* -------------------------------------------------- */
 
@@ -114,6 +147,7 @@ void init_game() {
     init_screen();
     init_snake();
     init_food();
+    place_food();
 }
 void terminate_game() {
     terminate_screen();
