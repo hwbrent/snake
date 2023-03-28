@@ -32,7 +32,7 @@ struct snake {
     int* segments_cols;
 
     // The row and column numbers of the head (first segment) of the snake.
-    int head[2];
+    int* head[2];
 
     // Whether a new segment should be added to the snake.
     bool should_add_seg;
@@ -47,13 +47,13 @@ struct food {
 
 /* -------------------------------------------------- */
 
-// Row and Column To Index
+// Row and Column TO Index
 int rctoi(int row, int col) {
     return (screen.cols * row) + col;
 }
 
-// Index To Row and Column
 int itorc[2] = { -1, -1 };
+// Index TO Row and Column
 void set_itorc(int i) {
     itorc[0] = i / screen.rows;
     itorc[1] = i % screen.cols;
@@ -110,9 +110,41 @@ void print_screen() {
 
 /* -------------------------------------------------- */
 
-void init_snake() {}
+void set_segment_pos(int seg_index, int row, int col) {
+    // snake.segments_rows[seg_index] = row;
+    // snake.segments_rows[seg_index] = col;
+}
 
-void terminate_snake() {}
+void init_snake() {
+    // Initial size of 1 because snake starts with only one segment.
+    snake.segments_rows = (int*)malloc(sizeof(int));
+    snake.segments_cols = (int*)malloc(sizeof(int));
+
+    // Set snake head as reference to first segment of segments.
+    snake.head[0] = &(snake.segments_rows[0]);
+    snake.head[1] = &(snake.segments_cols[1]);
+
+    // Initialise snake head to be centre of screen.
+    *(snake.head[0]) = screen.rows / 2;
+    *(snake.head[1]) = screen.cols / 2;
+
+    // Update screen pixels with snake head
+    enum Chars snake_char = SNAKE;
+    set_pixel(
+        rctoi(
+            *(snake.head[0]),
+            *(snake.head[1])
+        ),
+        SNAKE
+    );
+
+    snake.should_add_seg = false;
+}
+
+void terminate_snake() {
+    free(snake.segments_rows);
+    free(snake.segments_cols);
+}
 
 /* -------------------------------------------------- */
 
