@@ -2,7 +2,9 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <ncurses.h>
+
 #include <time.h>
+#include <errno.h>
 
 enum Chars {
     BORDER = '#',
@@ -27,6 +29,8 @@ struct screen {
 } screen;
 
 struct snake {
+    int length;
+
     // The row and column numbers of each segment of the snake.
     int* segments_rows;
     int* segments_cols;
@@ -36,6 +40,8 @@ struct snake {
 
     // Whether a new segment should be added to the snake.
     bool should_add_seg;
+
+    int direction[2];
 } snake;
 
 struct food {
@@ -116,6 +122,8 @@ void set_segment_pos(int seg_index, int row, int col) {
 }
 
 void init_snake() {
+    snake.length = 1;
+
     // Initial size of 1 because snake starts with only one segment.
     snake.segments_rows = (int*)malloc(sizeof(int));
     snake.segments_cols = (int*)malloc(sizeof(int));
@@ -139,11 +147,37 @@ void init_snake() {
     );
 
     snake.should_add_seg = false;
+
+    snake.direction[0] = 0;
+    snake.direction[1] = -1;
 }
 
 void terminate_snake() {
     free(snake.segments_rows);
     free(snake.segments_cols);
+}
+
+void move_snake() {
+    int prev[2];
+
+    prev[0] = *(snake.head[0]);
+    prev[1] = *(snake.head[1]);
+
+    *(snake.head[0]) += snake.direction[0];
+    *(snake.head[1]) += snake.direction[1];
+
+    set_pixel(
+        rctoi(
+            *(snake.head[0]),
+            *(snake.head[1])
+        ),
+        'S'
+    );
+
+    set_pixel(
+        rctoi(prev[0], prev[1]),
+        ' '
+    );
 }
 
 /* -------------------------------------------------- */
@@ -169,8 +203,27 @@ void terminate_game() {
 
 /* -------------------------------------------------- */
 
+// See https://stackoverflow.com/a/1157217
+int msleep(long msec) {
+    struct timespec ts;
+    int res;
+    if (msec < 0)
+    { errno = EINVAL; return -1; }
+    ts.tv_sec = msec / 1000;
+    ts.tv_nsec = (msec % 1000) * 1000000;
+    do { res = nanosleep(&ts, &ts); } while (res && errno == EINTR);
+    return res;
+}
+
+/* -------------------------------------------------- */
+
 void run_game() {
-    print_screen();
+    for (int i = 0; i < 10; i++) {
+        print_screen();
+        move_snake();
+        msleep(250);
+    }
+
     getch();
 }
 
