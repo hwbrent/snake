@@ -4,60 +4,79 @@
 #include <ncurses.h>
 #include <time.h>
 
-typedef struct pixel {
-    int row;
-    int col;
-    char value;
-} pixel;
+enum Chars {
+    BORDER = '#',
+    SNAKE = 'S',
+    FOOD = 'F',
+    EMPTY = ' '
+};
 
 struct screen {
-    int rows; // the number of rows in the screen
-    int cols; // the number of columns in the screen
+    // The number of rows in the screen.
+    int rows;
+
+    // The number of columns in the screen.
+    int cols; 
+
+    // The total number of pixels contained in the screen.
     int total_pixels;
-    pixel* pixels; // the char value that each pixel in the screen holds
-    int* empty_pixels; // indices of pixels in 'pixels' whose 'value' is an empty char.
+
+    // The char value that each pixel in the screen holds.
+    // An array of length 'screen.total_pixels'.
+    char* pixels;
 } screen;
 
 struct snake {
-    pixel* segments;
-    pixel* head;
+    // The row and column numbers of each segment of the snake.
+    int* segments_rows;
+    int* segments_cols;
+
+    // The row and column numbers of the head (first segment) of the snake.
+    int head[2];
+
+    // Whether a new segment should be added to the snake.
     bool should_add_seg;
 } snake;
 
-pixel food;
+struct food {
+    int row;
+    int col;
+    int value;
+} food;
+
 
 /* -------------------------------------------------- */
 
-int ind(int row, int col) {
+// Row and Column To Index
+int rctoi(int row, int col) {
     return (screen.cols * row) + col;
 }
 
-pixel get_pixel(int i) {
+// Index To Row and Column
+int itorc[2] = { -1, -1 };
+void set_itorc(int i) {
+    itorc[0] = i / screen.rows;
+    itorc[1] = i % screen.cols;
+}
+
+void set_pixel(int i, char value) {
+    screen.pixels[i] = value;
+}
+
+char get_pixel(int i) {
     return screen.pixels[i];
-}
-
-void set_pixel(int i, pixel p) {
-    screen.pixels[i] = p;
-}
-
-pixel create_pixel(int row, int col, char value) {
-    pixel p;
-    p.row = row;
-    p.col = col;
-    p.value = value;
-    return p;
 }
 
 void init_screen() {
     initscr();
-    getmaxyx(stdscr, screen.rows , screen.cols);
+    getmaxyx(stdscr, screen.rows , screen.cols); // Sets screen.rows and screen.cols
     cbreak();
     keypad(stdscr, TRUE);
     noecho();
 
     screen.total_pixels = screen.rows * screen.cols;
 
-    screen.pixels = (pixel*)malloc(screen.total_pixels * sizeof(pixel));
+    screen.pixels = (char*)malloc(screen.total_pixels * sizeof(char));
     for (int i = 0; i < screen.rows; i++) {
         bool is_top_bottom_border =
             (i == 0) || (i == screen.rows-1);
@@ -66,10 +85,9 @@ void init_screen() {
                 (j == 0) || (j == screen.cols-1);
             bool is_border = (is_top_bottom_border || is_left_right_border);
 
-            set_pixel(
-                ind(i,j),
-                create_pixel(i,j, (is_border) ? '#' : ' ')
-            );
+            enum Chars pixel_char = is_border ? BORDER : EMPTY;
+
+            set_pixel(rctoi(i,j), pixel_char);
         }
     }
 }
@@ -77,69 +95,32 @@ void init_screen() {
 void terminate_screen() {
     endwin();
     free(screen.pixels);
-    free(screen.empty_pixels);
 }
 
 void print_screen() {
-    for (int i = 0; i < screen.total_pixels; i++) {
-        pixel p = get_pixel(i);
-        mvaddch(p.row, p.col, p.value);
+    for (int i = 0; i < screen.rows; i++) {
+        for (int j = 0; j < screen.cols; j++) {
+            int pixel_index = rctoi(i,j);
+            char pixel = get_pixel(pixel_index);
+            mvaddch(i, j, pixel);
+        }
     }
     refresh();
 }
 
 /* -------------------------------------------------- */
 
-void init_snake() {
-    snake.segments = (pixel*)malloc(sizeof(pixel));
-    snake.head = &(snake.segments[0]);
-    *snake.head = create_pixel(screen.rows / 2, screen.cols / 2, 'S');
-    set_pixel(
-        ind((*snake.head).row, (*snake.head).col),
-        *snake.head
-    );
-} 
-void terminate_snake() {
-    free(snake.segments);
-}
+void init_snake() {}
+
+void terminate_snake() {}
 
 /* -------------------------------------------------- */
 
-void init_food() {
-    srand(time(NULL));
-    food.value = 'F';
-}
+void init_food() {}
+
 void terminate_food() {}
 
-void place_food() {
-    int empty_count = 0;
-    screen.empty_pixels = malloc(0);
-
-    for (int i = 1; i < screen.rows-1; i++) {
-        for (int j = 1; j < screen.cols-1; j++) {
-            int index = ind(i,j);
-            if (get_pixel(index).value != ' ') {
-                continue;
-            }
-
-            empty_count++;
-
-            // Increment the size of the array.
-            screen.empty_pixels = (int*)realloc(screen.empty_pixels, empty_count * sizeof(int));
-
-            screen.empty_pixels[empty_count-1] = index;
-        }
-    }
-
-    // Pick a random value from screen.empty_pixels
-    int random_index = rand() % (empty_count-1) + 0;
-    pixel prev_pixel = get_pixel(random_index);
-
-    food.row = prev_pixel.row;
-    food.col = prev_pixel.col;
-
-    set_pixel(random_index, food);
-}
+void place_food() {}
 
 /* -------------------------------------------------- */
 
@@ -147,7 +128,6 @@ void init_game() {
     init_screen();
     init_snake();
     init_food();
-    place_food();
 }
 void terminate_game() {
     terminate_screen();
