@@ -199,16 +199,62 @@ void move_snake() {
         }
     }
 
-    set_pixel(rctoi(prev_row, prev_col), ' ');
+    if (snake.should_add_seg) {
+        // snake.length++;
+
+        // snake.segments_rows = (int*)realloc(snake.segments_rows, snake.length * sizeof(int));
+        // snake.segments_cols = (int*)realloc(snake.segments_cols, snake.length * sizeof(int));
+
+        // update_segment(snake.length-1, prev_row, prev_col, -1, -1);
+    } else {
+        set_pixel(rctoi(prev_row, prev_col), ' ');
+    }
 }
 
 /* -------------------------------------------------- */
 
-void init_food() {}
+void place_food() {
+    int empty_count = 0;
+    int* empty_pixels = malloc(0);
+
+    for (int i = 1; i < screen.rows-1; i++) {
+        for (int j = 1; j < screen.cols-1; j++) {
+            int index = rctoi(i,j);
+            if (get_pixel(index) != ' ') {
+                continue;
+            }
+
+            empty_count++;
+
+            // Increment the size of the array.
+            empty_pixels = (int*)realloc(empty_pixels, empty_count * sizeof(int));
+
+            empty_pixels[empty_count-1] = index;
+        }
+    }
+
+    // Pick a random value from empty_pixels
+    int random_index = rand() % (empty_count - 1);
+
+    if (food.row > 0 && food.col > 0) {
+        set_pixel(rctoi(food.row, food.col), ' ');
+    }
+
+    set_itorc(random_index);
+    food.row = itorc[0];
+    food.col = itorc[1];
+
+    set_pixel(random_index, 'F');
+
+    free(empty_pixels);
+}
+
+void init_food() {
+    srand(time(NULL));
+    place_food();
+}
 
 void terminate_food() {}
-
-void place_food() {}
 
 /* -------------------------------------------------- */
 
