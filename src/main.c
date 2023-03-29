@@ -16,7 +16,7 @@ enum Chars {
     EMPTY = ' '
 };
 
-bool DEBUG = true;
+bool DEBUG = false;
 
 struct screen {
     // The number of rows in the screen.
@@ -131,31 +131,29 @@ void print_screen() {
 
 /* -------------------------------------------------- */
 
+void update_segment(int seg_i, int new_row, int new_col, int old_row, int old_col) {
+    snake.segments_rows[seg_i] = new_row;
+    snake.segments_cols[seg_i] = new_col;
+    set_pixel(rctoi(new_row, new_col), 'S');
+
+    if (old_row > -1 && old_col > -1) {
+        set_pixel(rctoi(new_row, new_col), ' ');
+    }
+}
+
 void init_snake() {
     snake.length = 1;
 
     // Initial size of 1 because snake starts with only one segment.
-    snake.segments_rows = (int*)malloc(1 * sizeof(int));
-    snake.segments_cols = (int*)malloc(1 * sizeof(int));
+    snake.segments_rows = (int*)malloc(snake.length * sizeof(int));
+    snake.segments_cols = (int*)malloc(snake.length * sizeof(int));
 
     // Initialise snake head to be centre of screen.
-    snake.segments_rows[0] = screen.rows / 2;
-    snake.segments_cols[0] = screen.cols / 2;
+    update_segment(0, screen.rows/2, screen.cols/2, -1, -1);
 
     if (DEBUG) {
         printf("Initial snake head position -> [%d, %d]\n", snake.segments_rows[0], snake.segments_cols[0]);
     }
-
-    // Update screen pixels with snake head
-    enum Chars snake_char = SNAKE;
-
-    set_pixel(
-        rctoi(
-            snake.segments_rows[0],
-            snake.segments_cols[1]
-        ),
-        SNAKE
-    );
 
     snake.should_add_seg = false;
 
@@ -169,28 +167,39 @@ void terminate_snake() {
 }
 
 void move_snake() {
-    int prev[2] = {
-        snake.segments_rows[0],
-        snake.segments_cols[0]
-    };
+    int prev_row;
+    int prev_col;
 
-    if (DEBUG) {
-        printf("Head pos before moving -> [%d, %d]\n",snake.segments_rows[0], snake.segments_cols[0]);
+    int current_row;
+    int current_col;
+
+    for (int i = 0; i < snake.length; i++) {
+        current_row = snake.segments_rows[i];
+        current_col = snake.segments_cols[i];
+
+        if (i == 0) {
+            prev_row = current_row;
+            prev_col = current_col;
+
+            update_segment(
+                i,
+                current_row+snake.direction[0],
+                current_col+snake.direction[1],
+                -1,
+                -1
+            );
+        } else {
+            int temp_row = current_row;
+            int temp_col = current_col;
+
+            update_segment(i, prev_row, prev_col, -1, -1);
+
+            prev_row = temp_row;
+            prev_col = temp_col;
+        }
     }
-    snake.segments_rows[0] += snake.direction[0];
-    snake.segments_cols[0] += snake.direction[1];
 
-    if (DEBUG) {
-        printf("Head pos after moving -> [%d, %d]\n",snake.segments_rows[0], snake.segments_cols[0]);
-    }
-
-    set_pixel(
-        rctoi(
-            snake.segments_rows[0],
-            snake.segments_cols[0]
-        ),
-        'S'
-    );
+    set_pixel(rctoi(prev_row, prev_col), ' ');
 }
 
 /* -------------------------------------------------- */
