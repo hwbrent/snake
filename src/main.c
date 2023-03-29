@@ -83,6 +83,8 @@ char get_pixel(int i) {
 }
 
 void init_screen() {
+    system("clear");
+
     if (!DEBUG) {
         initscr();
         getmaxyx(stdscr, screen.rows , screen.cols); // Sets screen.rows and screen.cols
@@ -173,88 +175,6 @@ void terminate_snake() {
     free(snake.segments_cols);
 }
 
-void move_snake() {
-    int prev_row;
-    int prev_col;
-
-    int current_row;
-    int current_col;
-
-    for (int i = 0; i < snake.length; i++) {
-        current_row = snake.segments_rows[i];
-        current_col = snake.segments_cols[i];
-
-        if (i == 0) {
-            prev_row = current_row;
-            prev_col = current_col;
-
-            update_segment(
-                i,
-                current_row+snake.direction[0],
-                current_col+snake.direction[1],
-                -1,
-                -1
-            );
-        } else {
-            int temp_row = current_row;
-            int temp_col = current_col;
-
-            update_segment(i, prev_row, prev_col, -1, -1);
-
-            prev_row = temp_row;
-            prev_col = temp_col;
-        }
-    }
-
-    if (snake.should_add_seg) {
-        // snake.length++;
-
-        // snake.segments_rows = (int*)realloc(snake.segments_rows, snake.length * sizeof(int));
-        // snake.segments_cols = (int*)realloc(snake.segments_cols, snake.length * sizeof(int));
-
-        // update_segment(snake.length-1, prev_row, prev_col, -1, -1);
-    } else {
-        set_pixel(rctoi(prev_row, prev_col), ' ');
-    }
-}
-
-void eval_snake_pos() {
-    // Scenarios:
-    // - Snake head is touching border                 -> game over
-    // - Snake head is touching another part of itself -> game over
-    // - Snake head is touching food                   -> snake gets longer
-
-    int head_row = snake.segments_rows[0];
-    int head_col = snake.segments_cols[0];
-
-    bool is_on_border =
-        (head_row == 0 || head_row == screen.rows - 1) ||
-        (head_col == 0 || head_col == screen.cols - 1);
-
-    if (is_on_border) {
-        game_should_continue = false;
-        return;
-    }
-
-    // Check if snake is eating itself.
-    for (int i = 1; i < snake.length; i++) {
-        int seg_row = snake.segments_rows[i];
-        int seg_col = snake.segments_cols[i];
-
-        if (seg_row == head_row && seg_col == head_col) {
-            game_should_continue = false;
-            return;
-        }
-    }
-
-    // Check if snake has eaten food.
-    if (head_row == food.row && head_col == food.col) {
-        snake.should_add_seg = true;
-    }
-}
-
-/* -------------------------------------------------- */
-
 void place_food() {
     int empty_count = 0;
     int* empty_pixels = malloc(0);
@@ -290,6 +210,97 @@ void place_food() {
 
     free(empty_pixels);
 }
+
+void move_snake() {
+    int prev_row;
+    int prev_col;
+
+    int current_row;
+    int current_col;
+
+    for (int i = 0; i < snake.length; i++) {
+        current_row = snake.segments_rows[i];
+        current_col = snake.segments_cols[i];
+
+        if (i == 0) {
+            prev_row = current_row;
+            prev_col = current_col;
+
+            int new_row = current_row+snake.direction[0];
+            int new_col = current_col+snake.direction[1];
+
+            // If the head of the snake hits the food.
+            if (get_pixel(rctoi(new_row, new_col)) == 'F') {
+                // printf("\nhit food innit\n");
+                snake.should_add_seg = true;
+            }
+
+            update_segment(
+                i,
+                new_row,
+                new_col,
+                -1,
+                -1
+            );
+
+        } else {
+            int temp_row = current_row;
+            int temp_col = current_col;
+
+            update_segment(i, prev_row, prev_col, -1, -1);
+
+            prev_row = temp_row;
+            prev_col = temp_col;
+        }
+    }
+
+    if (snake.should_add_seg) {
+        snake.should_add_seg = false;
+
+        snake.length++;
+
+        snake.segments_rows = (int*)realloc(snake.segments_rows, snake.length * sizeof(int));
+        snake.segments_cols = (int*)realloc(snake.segments_cols, snake.length * sizeof(int));
+
+        update_segment(snake.length-1, prev_row, prev_col, -1, -1);
+
+        place_food();
+    } else {
+        set_pixel(rctoi(prev_row, prev_col), ' ');
+    }
+}
+
+void eval_snake_pos() {
+    // Scenarios:
+    // - Snake head is touching border                 -> game over
+    // - Snake head is touching another part of itself -> game over
+    // - Snake head is touching food                   -> snake gets longer
+
+    int head_row = snake.segments_rows[0];
+    int head_col = snake.segments_cols[0];
+
+    bool is_on_border =
+        (head_row == 0 || head_row == screen.rows - 1) ||
+        (head_col == 0 || head_col == screen.cols - 1);
+
+    if (is_on_border) {
+        game_should_continue = false;
+        return;
+    }
+
+    // Check if snake is eating itself.
+    for (int i = 1; i < snake.length; i++) {
+        int seg_row = snake.segments_rows[i];
+        int seg_col = snake.segments_cols[i];
+
+        if (seg_row == head_row && seg_col == head_col) {
+            game_should_continue = false;
+            return;
+        }
+    }
+}
+
+/* -------------------------------------------------- */
 
 void init_food() {
     srand(time(NULL));
