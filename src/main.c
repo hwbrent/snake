@@ -218,6 +218,41 @@ void move_snake() {
     }
 }
 
+void eval_snake_pos() {
+    // Scenarios:
+    // - Snake head is touching border                 -> game over
+    // - Snake head is touching another part of itself -> game over
+    // - Snake head is touching food                   -> snake gets longer
+
+    int head_row = snake.segments_rows[0];
+    int head_col = snake.segments_cols[0];
+
+    bool is_on_border =
+        (head_row == 0 || head_row == screen.rows - 1) ||
+        (head_col == 0 || head_col == screen.cols - 1);
+
+    if (is_on_border) {
+        game_should_continue = false;
+        return;
+    }
+
+    // Check if snake is eating itself.
+    for (int i = 1; i < snake.length; i++) {
+        int seg_row = snake.segments_rows[i];
+        int seg_col = snake.segments_cols[i];
+
+        if (seg_row == head_row && seg_col == head_col) {
+            game_should_continue = false;
+            return;
+        }
+    }
+
+    // Check if snake has eaten food.
+    if (head_row == food.row && head_col == food.col) {
+        snake.should_add_seg = true;
+    }
+}
+
 /* -------------------------------------------------- */
 
 void place_food() {
@@ -363,6 +398,7 @@ void run_game() {
     while (game_should_continue) {
         print_screen();
         move_snake();
+        eval_snake_pos();
         msleep(125);
     }
 
