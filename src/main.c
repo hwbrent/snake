@@ -3,6 +3,9 @@
 #include <stdbool.h>
 #include <ncurses.h>
 
+#include <unistd.h>
+#include <sys/ioctl.h>
+
 #include <time.h>
 #include <errno.h>
 
@@ -12,6 +15,8 @@ enum Chars {
     FOOD = 'F',
     EMPTY = ' '
 };
+
+bool DEBUG = true;
 
 struct screen {
     // The number of rows in the screen.
@@ -34,9 +39,6 @@ struct snake {
     // The row and column numbers of each segment of the snake.
     int* segments_rows;
     int* segments_cols;
-
-    // The row and column numbers of the head (first segment) of the snake.
-    int* head[2];
 
     // Whether a new segment should be added to the snake.
     bool should_add_seg;
@@ -74,11 +76,20 @@ char get_pixel(int i) {
 }
 
 void init_screen() {
-    initscr();
-    getmaxyx(stdscr, screen.rows , screen.cols); // Sets screen.rows and screen.cols
-    cbreak();
-    keypad(stdscr, TRUE);
-    noecho();
+    if (!DEBUG) {
+        initscr();
+        getmaxyx(stdscr, screen.rows , screen.cols); // Sets screen.rows and screen.cols
+        cbreak();
+        keypad(stdscr, TRUE);
+        noecho();
+    } else {
+        // See https://stackoverflow.com/a/1022961
+        struct winsize w;
+        ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+
+        screen.rows = w.ws_row;
+        screen.cols = w.ws_col;
+    }
 
     screen.total_pixels = screen.rows * screen.cols;
 
@@ -104,6 +115,10 @@ void terminate_screen() {
 }
 
 void print_screen() {
+    if (DEBUG) {
+        return;
+    }
+
     for (int i = 0; i < screen.rows; i++) {
         for (int j = 0; j < screen.cols; j++) {
             int pixel_index = rctoi(i,j);
@@ -116,32 +131,28 @@ void print_screen() {
 
 /* -------------------------------------------------- */
 
-void set_segment_pos(int seg_index, int row, int col) {
-    // snake.segments_rows[seg_index] = row;
-    // snake.segments_rows[seg_index] = col;
-}
-
 void init_snake() {
     snake.length = 1;
 
     // Initial size of 1 because snake starts with only one segment.
-    snake.segments_rows = (int*)malloc(sizeof(int));
-    snake.segments_cols = (int*)malloc(sizeof(int));
-
-    // Set snake head as reference to first segment of segments.
-    snake.head[0] = &(snake.segments_rows[0]);
-    snake.head[1] = &(snake.segments_cols[1]);
+    snake.segments_rows = (int*)malloc(1 * sizeof(int));
+    snake.segments_cols = (int*)malloc(1 * sizeof(int));
 
     // Initialise snake head to be centre of screen.
-    *(snake.head[0]) = screen.rows / 2;
-    *(snake.head[1]) = screen.cols / 2;
+    snake.segments_rows[0] = screen.rows / 2;
+    snake.segments_cols[0] = screen.cols / 2;
+
+    if (DEBUG) {
+        printf("Initial snake head position -> [%d, %d]\n", snake.segments_rows[0], snake.segments_cols[0]);
+    }
 
     // Update screen pixels with snake head
     enum Chars snake_char = SNAKE;
+
     set_pixel(
         rctoi(
-            *(snake.head[0]),
-            *(snake.head[1])
+            snake.segments_rows[0],
+            snake.segments_cols[1]
         ),
         SNAKE
     );
@@ -158,25 +169,27 @@ void terminate_snake() {
 }
 
 void move_snake() {
-    int prev[2];
+    int prev[2] = {
+        snake.segments_rows[0],
+        snake.segments_cols[0]
+    };
 
-    prev[0] = *(snake.head[0]);
-    prev[1] = *(snake.head[1]);
+    if (DEBUG) {
+        printf("Head pos before moving -> [%d, %d]\n",snake.segments_rows[0], snake.segments_cols[0]);
+    }
+    snake.segments_rows[0] += snake.direction[0];
+    snake.segments_cols[0] += snake.direction[1];
 
-    *(snake.head[0]) += snake.direction[0];
-    *(snake.head[1]) += snake.direction[1];
+    if (DEBUG) {
+        printf("Head pos after moving -> [%d, %d]\n",snake.segments_rows[0], snake.segments_cols[0]);
+    }
 
     set_pixel(
         rctoi(
-            *(snake.head[0]),
-            *(snake.head[1])
+            snake.segments_rows[0],
+            snake.segments_cols[0]
         ),
         'S'
-    );
-
-    set_pixel(
-        rctoi(prev[0], prev[1]),
-        ' '
     );
 }
 
