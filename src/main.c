@@ -265,6 +265,22 @@ void terminate_food() {}
 
 /* -------------------------------------------------- */
 
+char* get_direction() {
+    if (snake.direction[0] == -1 && snake.direction[1] == 0) {
+        return "up";
+    } else if (snake.direction[0] == 1 && snake.direction[1] == 0) {
+        return "down";
+    } else if (snake.direction[0] == 0 && snake.direction[1] == -1) {
+        return "left";
+    } else /* if (snake.direction[0] == 0 && snake.direction[1] == 1) */ {
+        return "right";
+    }
+}
+
+bool is_direction(char* direction) {
+    return direction == get_direction();
+}
+
 void *getch_thread_fn(void *vargp) {
     while (true) {
         pressed_key = getch();
@@ -275,26 +291,34 @@ void *getch_thread_fn(void *vargp) {
 
             case 'w':
             case KEY_UP:
-                snake.direction[0] = -1;
-                snake.direction[1] = 0;
+                if (!is_direction("down")) {
+                    snake.direction[0] = -1;
+                    snake.direction[1] = 0;
+                }
                 break;
 
             case 'a':
             case KEY_LEFT:
-                snake.direction[0] = 0;
-                snake.direction[1] = -1;
+                if (!is_direction("right")) {
+                    snake.direction[0] = 0;
+                    snake.direction[1] = -1;
+                }
                 break;
 
             case 's':
             case KEY_DOWN:
-                snake.direction[0] = 1;
-                snake.direction[1] = 0;
+                if (!is_direction("up")) {
+                    snake.direction[0] = 1;
+                    snake.direction[1] = 0;
+                }
                 break;
 
             case 'd':
             case KEY_RIGHT:
-                snake.direction[0] = 0;
-                snake.direction[1] = 1;
+                if (!is_direction("left")) {
+                    snake.direction[0] = 0;
+                    snake.direction[1] = 1;
+                }
                 break;
 
             default:
@@ -339,7 +363,7 @@ void run_game() {
     while (game_should_continue) {
         print_screen();
         move_snake();
-        msleep(250);
+        msleep(125);
     }
 
     // getch();
