@@ -9,6 +9,8 @@
 #include <time.h>
 #include <errno.h>
 
+#include <pthread.h>
+
 enum Chars {
     BORDER = '#',
     SNAKE = 'S',
@@ -17,6 +19,11 @@ enum Chars {
 };
 
 bool DEBUG = false;
+
+bool game_should_continue = true;
+
+int pressed_key;
+pthread_t ptid;
 
 struct screen {
     // The number of rows in the screen.
@@ -258,15 +265,58 @@ void terminate_food() {}
 
 /* -------------------------------------------------- */
 
+void *getch_thread_fn(void *vargp) {
+    while (true) {
+        pressed_key = getch();
+        switch (pressed_key) {
+            case 'q':
+                game_should_continue = false;
+                break;
+
+            case 'w':
+            case KEY_UP:
+                snake.direction[0] = -1;
+                snake.direction[1] = 0;
+                break;
+
+            case 'a':
+            case KEY_LEFT:
+                snake.direction[0] = 0;
+                snake.direction[1] = -1;
+                break;
+
+            case 's':
+            case KEY_DOWN:
+                snake.direction[0] = 1;
+                snake.direction[1] = 0;
+                break;
+
+            case 'd':
+            case KEY_RIGHT:
+                snake.direction[0] = 0;
+                snake.direction[1] = 1;
+                break;
+
+            default:
+                break;
+        }
+    }
+}
+
+/* -------------------------------------------------- */
+
 void init_game() {
     init_screen();
     init_snake();
     init_food();
+    pthread_create(&ptid, NULL, &getch_thread_fn, NULL);
 }
+
 void terminate_game() {
     terminate_screen();
     terminate_snake();
     terminate_food();
+    pthread_cancel(ptid);
 }
 
 /* -------------------------------------------------- */
@@ -286,13 +336,13 @@ int msleep(long msec) {
 /* -------------------------------------------------- */
 
 void run_game() {
-    for (int i = 0; i < 10; i++) {
+    while (game_should_continue) {
         print_screen();
         move_snake();
         msleep(250);
     }
 
-    getch();
+    // getch();
 }
 
 /* -------------------------------------------------- */
