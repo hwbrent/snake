@@ -11,10 +11,10 @@
 
 #include <pthread.h>
 
-char BORDER = '#';
-char SNAKE = 'S';
-char FOOD = 'F';
-char EMPTY = ' ';
+#define BORDER '#'
+#define SNAKE 'S'
+#define FOOD 'F'
+#define EMPTY ' '
 
 bool DEBUG = false;
 
@@ -30,6 +30,9 @@ struct screen {
 } screen;
 
 struct snake {
+    int* head[2];
+    int* rows;
+    int* cols;
     int direction[2];
 } snake;
 
@@ -77,13 +80,30 @@ void terminate_screen() {
 /* -------------------------------------------------- */
 
 void init_snake() {
-    mvaddch(screen.rows / 2, screen.cols / 2, SNAKE);
+    snake.rows = malloc(screen.rows * screen.cols * sizeof *snake.rows);
+    snake.rows[0] = screen.rows / 2;
+
+    snake.cols = malloc(screen.rows * screen.cols * sizeof *snake.rows);
+    snake.cols[0] = screen.cols / 2;
+
+    snake.head[0] = &( snake.rows[0] );
+    snake.head[1] = &( snake.cols[0] );
+    mvaddch(
+        *(snake.head[0]),
+        *(snake.head[1]),
+        SNAKE
+    );
 
     snake.direction[0] = 0;
     snake.direction[1] = -1;
 }
 
-void terminate_snake() {}
+void terminate_snake() {
+    free(snake.rows);
+    free(snake.cols);
+}
+
+void move_snake() {}
 
 /* -------------------------------------------------- */
 
