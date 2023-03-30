@@ -11,12 +11,10 @@
 
 #include <pthread.h>
 
-enum Chars {
-    BORDER = '#',
-    SNAKE = 'S',
-    FOOD = 'F',
-    EMPTY = ' '
-};
+char BORDER = '#';
+char SNAKE = 'S';
+char FOOD = 'F';
+char EMPTY = ' ';
 
 bool DEBUG = false;
 
@@ -111,9 +109,7 @@ void init_screen() {
                 (j == 0) || (j == screen.cols-1);
             bool is_border = (is_top_bottom_border || is_left_right_border);
 
-            enum Chars pixel_char = is_border ? BORDER : EMPTY;
-
-            set_pixel(rctoi(i,j), pixel_char);
+            set_pixel(rctoi(i,j), is_border ? BORDER : EMPTY);
         }
     }
 }
@@ -143,10 +139,10 @@ void print_screen() {
 void update_segment(int seg_i, int new_row, int new_col, int old_row, int old_col) {
     snake.segments_rows[seg_i] = new_row;
     snake.segments_cols[seg_i] = new_col;
-    set_pixel(rctoi(new_row, new_col), 'S');
+    set_pixel(rctoi(new_row, new_col), SNAKE);
 
     if (old_row > -1 && old_col > -1) {
-        set_pixel(rctoi(new_row, new_col), ' ');
+        set_pixel(rctoi(new_row, new_col), EMPTY);
     }
 }
 
@@ -182,7 +178,7 @@ void place_food() {
     for (int i = 1; i < screen.rows-1; i++) {
         for (int j = 1; j < screen.cols-1; j++) {
             int index = rctoi(i,j);
-            if (get_pixel(index) != ' ') {
+            if (get_pixel(index) != EMPTY) {
                 continue;
             }
 
@@ -199,14 +195,14 @@ void place_food() {
     int random_index = rand() % (empty_count - 1);
 
     if (food.row > 0 && food.col > 0) {
-        set_pixel(rctoi(food.row, food.col), ' ');
+        set_pixel(rctoi(food.row, food.col), EMPTY);
     }
 
     set_itorc(random_index);
     food.row = itorc[0];
     food.col = itorc[1];
 
-    set_pixel(random_index, 'F');
+    set_pixel(random_index, FOOD);
 
     free(empty_pixels);
 }
@@ -230,7 +226,7 @@ void move_snake() {
             int new_col = current_col+snake.direction[1];
 
             // If the head of the snake hits the food.
-            if (get_pixel(rctoi(new_row, new_col)) == 'F') {
+            if (get_pixel(rctoi(new_row, new_col)) == FOOD) {
                 // printf("\nhit food innit\n");
                 snake.should_add_seg = true;
             }
@@ -266,7 +262,7 @@ void move_snake() {
 
         place_food();
     } else {
-        set_pixel(rctoi(prev_row, prev_col), ' ');
+        set_pixel(rctoi(prev_row, prev_col), EMPTY);
     }
 }
 
