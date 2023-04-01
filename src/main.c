@@ -22,9 +22,6 @@ bool DEBUG = false;
 
 bool game_should_continue = true;
 
-int pressed_key;
-pthread_t ptid;
-
 struct screen {
     int rows;
     int cols;
@@ -207,6 +204,9 @@ void move_snake() {
 
 /* -------------------------------------------------- */
 
+int pressed_key;
+pthread_t ptid;
+
 char* get_direction() {
     if (snake.direction[0] == -1 && snake.direction[1] == 0) {
         return "up";
@@ -271,22 +271,6 @@ void *getch_thread_fn(void *vargp) {
 
 /* -------------------------------------------------- */
 
-void init_game() {
-    init_screen();
-    init_snake();
-    init_food();
-    pthread_create(&ptid, NULL, &getch_thread_fn, NULL);
-}
-
-void terminate_game() {
-    terminate_screen();
-    terminate_snake();
-    terminate_food();
-    pthread_cancel(ptid);
-}
-
-/* -------------------------------------------------- */
-
 // See https://stackoverflow.com/a/1157217
 int msleep(long msec) {
     struct timespec ts;
@@ -300,12 +284,25 @@ int msleep(long msec) {
 
 /* -------------------------------------------------- */
 
+void init_game() {
+    init_screen();
+    init_snake();
+    init_food();
+    pthread_create(&ptid, NULL, &getch_thread_fn, NULL);
+}
+
 void run_game() {
-    // for (int i = 0; i < 10; i++) {
     while (game_should_continue) {
         move_snake();
         msleep(125);
     }
+}
+
+void terminate_game() {
+    terminate_screen();
+    terminate_snake();
+    terminate_food();
+    pthread_cancel(ptid);
 }
 
 /* -------------------------------------------------- */
