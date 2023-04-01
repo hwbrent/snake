@@ -11,6 +11,8 @@
 
 #include <pthread.h>
 
+#define SNAKE_INITIAL_LENGTH 1
+
 #define BORDER '#'
 #define SNAKE 'S'
 #define FOOD 'F'
@@ -30,6 +32,7 @@ struct screen {
 } screen;
 
 struct snake {
+    int length;
     int* head[2];
     int* rows;
     int* cols;
@@ -47,6 +50,7 @@ void init_screen() {
         cbreak();
         keypad(stdscr, TRUE);
         noecho();
+        curs_set(0);
     } else {
         // See https://stackoverflow.com/a/1022961
         struct winsize w;
@@ -80,17 +84,17 @@ void terminate_screen() {
 /* -------------------------------------------------- */
 
 void init_snake() {
-    snake.rows = malloc(screen.rows * screen.cols * sizeof *snake.rows);
+    snake.length = SNAKE_INITIAL_LENGTH;
+
+    snake.rows = malloc(snake.length * sizeof *snake.rows);
     snake.rows[0] = screen.rows / 2;
 
-    snake.cols = malloc(screen.rows * screen.cols * sizeof *snake.rows);
+    snake.cols = malloc(snake.length * sizeof *snake.rows);
     snake.cols[0] = screen.cols / 2;
 
-    snake.head[0] = &( snake.rows[0] );
-    snake.head[1] = &( snake.cols[0] );
     mvaddch(
-        *(snake.head[0]),
-        *(snake.head[1]),
+        snake.rows[0],
+        snake.cols[0],
         SNAKE
     );
 
@@ -103,7 +107,39 @@ void terminate_snake() {
     free(snake.cols);
 }
 
-void move_snake() {}
+void move_snake() {
+    int prev[2];
+
+    for (int i = 0; i < snake.length; i++) {
+        if (i == 0) {
+            prev[0] = snake.rows[0];
+            prev[1] = snake.cols[0];
+
+            snake.rows[0] += snake.direction[0];
+            snake.cols[0] += snake.direction[1];
+
+            // Evaluate whether the head is in a valid position.
+            int c = mvinch(snake.rows[0], snake.cols[0]);
+            if (c == BORDER || c == SNAKE) {
+                game_should_continue = false;
+                return;
+            } else if (c == FOOD) {
+                // increment snake length
+            }
+
+            mvaddch(snake.rows[0], snake.cols[0], SNAKE);
+
+        } else {}
+    }
+
+    if (DEBUG) {
+        printf("[%d, %d], [%d, %d]\n", prev[0], prev[1], snake.rows[0], snake.cols[0]);
+    }
+
+    mvaddch(prev[0], prev[1], EMPTY);
+
+    refresh();
+}
 
 /* -------------------------------------------------- */
 
@@ -207,7 +243,9 @@ int msleep(long msec) {
 /* -------------------------------------------------- */
 
 void run_game() {
+    // for (int i = 0; i < 10; i++) {
     while (game_should_continue) {
+        move_snake();
         msleep(125);
     }
 }
