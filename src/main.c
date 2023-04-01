@@ -22,15 +22,14 @@ bool DEBUG = false;
 
 bool game_should_continue = true;
 
+// Singleton storing screen information
 struct screen {
     int rows;
     int cols;
-    int total_pixels;
 } screen;
 
 struct snake {
     int length;
-    int* head[2];
     int* rows;
     int* cols;
     int direction[2];
@@ -46,34 +45,30 @@ struct food {
 void init_screen() {
     system("clear");
 
-    if (!DEBUG) {
-        initscr();
-        getmaxyx(stdscr, screen.rows , screen.cols); // Sets screen.rows and screen.cols
-        cbreak();
-        keypad(stdscr, TRUE);
-        noecho();
-        curs_set(0);
-    } else {
-        // See https://stackoverflow.com/a/1022961
-        struct winsize w;
-        ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+    initscr();
 
-        screen.rows = w.ws_row;
-        screen.cols = w.ws_col;
-    }
+    // Assign the numbers of rows and columns to 'screen.rows' and 'screen.cols'.
+    getmaxyx(stdscr, screen.rows , screen.cols);
 
+    cbreak();
+
+    // Enables reading of arrow keys, F1, F2, etc.
+    keypad(stdscr, TRUE);
+
+    // Stops characters being echoed when typed.
+    noecho();
+
+    // Makes the cursor invisible.
+    curs_set(0);
+
+    // Draw the outer borders of the screen.
     for (int i = 0; i < screen.rows; i++) {
-
-        bool is_top_bottom_border =
-            (i == 0) || (i == screen.rows-1);
-
         for (int j = 0; j < screen.cols; j++) {
-
-            bool is_left_right_border = 
-                (j == 0) || (j == screen.cols-1);
-
-            bool is_border = (is_top_bottom_border || is_left_right_border);
-
+            bool is_border =
+                i == 0 ||
+                j == 0 ||
+                i == screen.rows-1 ||
+                j == screen.cols-1;
             mvaddch(i, j, is_border ? BORDER : EMPTY);
         }
     }
