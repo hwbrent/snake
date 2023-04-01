@@ -109,10 +109,6 @@ void place_food() {
     }
 
     int random_index = rand() % count;
-
-    if (food.row != NULL && food.col != NULL) {
-        mvaddch(food.row, food.col, EMPTY);
-    }
     food.row = empty_rows[random_index];
     food.col = empty_cols[random_index];
     mvaddch(food.row, food.col, FOOD);
@@ -176,9 +172,6 @@ void move_snake() {
             } else if (c == FOOD) {
                 // increment snake length
                 ate_food = true;
-                snake.length++;
-                snake.rows = realloc(snake.rows, snake.length * sizeof *snake.rows);
-                snake.cols = realloc(snake.cols, snake.length * sizeof *snake.cols);
             }
 
             mvaddch(snake.rows[0], snake.cols[0], SNAKE);
@@ -195,19 +188,19 @@ void move_snake() {
         }
     }
 
-    if (DEBUG) {
-        printf("[%d, %d], [%d, %d]\n", prev[0], prev[1], snake.rows[0], snake.cols[0]);
-    }
-
     if (ate_food) {
+        snake.length++;
+
+        snake.rows = realloc(snake.rows, snake.length * sizeof *snake.rows);
+        snake.cols = realloc(snake.cols, snake.length * sizeof *snake.cols);
+
         snake.rows[snake.length-1] = prev[0];
         snake.cols[snake.length-1] = prev[1];
+
         place_food();
-        // mvaddch(prev[0], prev[1], SNAKE);
-    } /* else {
+    } else {
         mvaddch(prev[0], prev[1], EMPTY);
-    } */
-    mvaddch(prev[0], prev[1], EMPTY);
+    }
 
     refresh();
 }
