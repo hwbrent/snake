@@ -88,66 +88,6 @@ void terminate_screen() {
 
 /* -------------------------------------------------- */
 
-void init_snake() {
-    snake.length = SNAKE_INITIAL_LENGTH;
-
-    snake.rows = malloc(snake.length * sizeof *snake.rows);
-    snake.rows[0] = screen.rows / 2;
-
-    snake.cols = malloc(snake.length * sizeof *snake.rows);
-    snake.cols[0] = screen.cols / 2;
-
-    mvaddch(
-        snake.rows[0],
-        snake.cols[0],
-        SNAKE
-    );
-
-    snake.direction[0] = 0;
-    snake.direction[1] = -1;
-}
-
-void terminate_snake() {
-    free(snake.rows);
-    free(snake.cols);
-}
-
-void move_snake() {
-    int prev[2];
-
-    for (int i = 0; i < snake.length; i++) {
-        if (i == 0) {
-            prev[0] = snake.rows[0];
-            prev[1] = snake.cols[0];
-
-            snake.rows[0] += snake.direction[0];
-            snake.cols[0] += snake.direction[1];
-
-            // Evaluate whether the head is in a valid position.
-            int c = mvinch(snake.rows[0], snake.cols[0]);
-            if (c == BORDER || c == SNAKE) {
-                game_should_continue = false;
-                return;
-            } else if (c == FOOD) {
-                // increment snake length
-            }
-
-            mvaddch(snake.rows[0], snake.cols[0], SNAKE);
-
-        } else {}
-    }
-
-    if (DEBUG) {
-        printf("[%d, %d], [%d, %d]\n", prev[0], prev[1], snake.rows[0], snake.cols[0]);
-    }
-
-    mvaddch(prev[0], prev[1], EMPTY);
-
-    refresh();
-}
-
-/* -------------------------------------------------- */
-
 void place_food() {
     // Find all the spaces in which the food could be put.
     int* empty_rows = malloc(0);
@@ -188,6 +128,89 @@ void init_food() {
 }
 
 void terminate_food() {}
+
+/* -------------------------------------------------- */
+
+void init_snake() {
+    snake.length = SNAKE_INITIAL_LENGTH;
+
+    snake.rows = malloc(snake.length * sizeof *snake.rows);
+    snake.rows[0] = screen.rows / 2;
+
+    snake.cols = malloc(snake.length * sizeof *snake.rows);
+    snake.cols[0] = screen.cols / 2;
+
+    mvaddch(
+        snake.rows[0],
+        snake.cols[0],
+        SNAKE
+    );
+
+    snake.direction[0] = 0;
+    snake.direction[1] = -1;
+}
+
+void terminate_snake() {
+    free(snake.rows);
+    free(snake.cols);
+}
+
+void move_snake() {
+    int prev[2];
+
+    bool ate_food = false;
+
+    for (int i = 0; i < snake.length; i++) {
+        if (i == 0) {
+            prev[0] = snake.rows[0];
+            prev[1] = snake.cols[0];
+
+            snake.rows[0] += snake.direction[0];
+            snake.cols[0] += snake.direction[1];
+
+            // Evaluate whether the head is in a valid position.
+            int c = mvinch(snake.rows[0], snake.cols[0]);
+            if (c == BORDER || c == SNAKE) {
+                game_should_continue = false;
+                return;
+            } else if (c == FOOD) {
+                // increment snake length
+                ate_food = true;
+                snake.length++;
+                snake.rows = realloc(snake.rows, snake.length * sizeof *snake.rows);
+                snake.cols = realloc(snake.cols, snake.length * sizeof *snake.cols);
+            }
+
+            mvaddch(snake.rows[0], snake.cols[0], SNAKE);
+
+        } else {
+            int temp_row = snake.rows[i];
+            int temp_col = snake.cols[i];
+
+            snake.rows[i] = prev[0];
+            snake.cols[i] = prev[1];
+
+            prev[0] = temp_row;
+            prev[1] = temp_col;
+        }
+    }
+
+    if (DEBUG) {
+        printf("[%d, %d], [%d, %d]\n", prev[0], prev[1], snake.rows[0], snake.cols[0]);
+    }
+
+    if (ate_food) {
+        snake.rows[snake.length-1] = prev[0];
+        snake.cols[snake.length-1] = prev[1];
+        place_food();
+        // mvaddch(prev[0], prev[1], SNAKE);
+    } /* else {
+        mvaddch(prev[0], prev[1], EMPTY);
+    } */
+    mvaddch(prev[0], prev[1], EMPTY);
+
+    refresh();
+}
 
 /* -------------------------------------------------- */
 
