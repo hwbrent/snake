@@ -1,4 +1,4 @@
-main: food/src/food.c game/src/game.c screen/src/screen.c snake/src/snake.c main.c a.out *.o
+main: food/src/food.c game/src/game.c screen/src/screen.c snake/src/snake.c main.c
 	@gcc -c food/src/food.c
 	@gcc -c game/src/game.c
 	@gcc -c screen/src/screen.c
