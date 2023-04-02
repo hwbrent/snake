@@ -9,9 +9,9 @@
 #define FOOD 'F'
 #define EMPTY ' '
 
-bool DEBUG = false;
+bool DEBUG;
 
-bool game_should_continue = true;
+bool game_should_continue;
 
 int pressed_key;
 pthread_t ptid;

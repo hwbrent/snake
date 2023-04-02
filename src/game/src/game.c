@@ -8,6 +8,10 @@
 #include "../../snake/src/snake.h"
 #include "game.h"
 
+bool DEBUG = false;
+
+bool game_should_continue = true;
+
 char* get_direction() {
     if (snake.direction[0] == -1 && snake.direction[1] == 0) {
         return "up";
