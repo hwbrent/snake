@@ -4,7 +4,6 @@
 #include <stdbool.h>
 #include <pthread.h>
 
-#define SNAKE_INITIAL_LENGTH 1
 #define BORDER '#'
 #define SNAKE 'S'
 #define FOOD 'F'

@@ -1,6 +1,8 @@
 #ifndef SNAKE_H_   /* Include guard */
 #define SNAKE_H_
 
+#define INITIAL_LENGTH 1
+
 struct snake {
     int length;
     int* rows;

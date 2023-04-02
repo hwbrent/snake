@@ -8,7 +8,7 @@
 #include "snake.h"
 
 void init_snake() {
-    snake.length = SNAKE_INITIAL_LENGTH;
+    snake.length = INITIAL_LENGTH;
 
     // Initialise memory for snake segments.
     snake.rows = malloc(snake.length * sizeof *snake.rows);
