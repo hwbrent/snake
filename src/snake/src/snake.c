@@ -2,9 +2,9 @@
 #include <stdbool.h>
 #include <ncurses.h>
 
-#include "game.h"
-#include "food.h"
-#include "screen.h"
+#include "../../game/src/game.h"
+#include "../../food/src/food.h"
+#include "../../screen/src/screen.h"
 #include "snake.h"
 
 void init_snake() {
