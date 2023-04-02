@@ -1,8 +1,9 @@
 #include <stdlib.h>
+#include <ncurses.h>
 
 #include "food.h"
-#include "screen.h"
-#include "game.h"
+#include "../../screen/src/screen.h"
+#include "../../game/src/game.h"
 
 void place_food() {
     // Find all the spaces in which the food could be put.
