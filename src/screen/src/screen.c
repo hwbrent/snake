@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <ncurses.h>
-#include "game.h"
+
+#include "../../game/src/game.h"
 #include "screen.h"
 
 void init_screen() {

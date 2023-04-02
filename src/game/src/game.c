@@ -3,9 +3,9 @@
 #include <errno.h>
 #include <pthread.h>
 
-#include "food.h"
-#include "screen.h"
-#include "snake.h"
+#include "../../food/src/food.h"
+#include "../../screen/src/screen.h"
+#include "../../snake/src/snake.h"
 #include "game.h"
 
 char* get_direction() {
