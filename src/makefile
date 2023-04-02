@@ -1,16 +1,13 @@
-main: main.c
-	@gcc main.c -lncurses -lpthread
+main: food/src/food.c game/src/game.c screen/src/screen.c snake/src/snake.c main.c a.out *.o
+	@gcc -c food/src/food.c
+	@gcc -c game/src/game.c
+	@gcc -c screen/src/screen.c
+	@gcc -c snake/src/snake.c
+	@gcc -c main.c
+	@gcc *.o -lncurses -lpthread
 	@./a.out
 	@make clean
 
 clean: a.out *.o
 	@rm *.o
 	@rm a.out
-
-main2: food/src/food.c game/src/game.c screen/src/screen.c snake/src/snake.c main.c
-	@gcc -c food/src/food.c -lncurses -lpthread
-	@gcc -c game/src/game.c -lncurses -lpthread
-	@gcc -c screen/src/screen.c -lncurses -lpthread
-	@gcc -c snake/src/snake.c -lncurses -lpthread
-	@gcc -c main.c -lncurses -lpthread
-#	@gcc **/*.o
