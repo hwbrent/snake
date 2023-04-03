@@ -21,3 +21,9 @@ The general flow of control of a menu program looks like this.
 
     9. End curses
 */
+
+void init_gui() {
+    printw("gui\n");
+}
+
+void terminate_gui() {}
