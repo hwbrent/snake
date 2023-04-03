@@ -5,24 +5,6 @@
 #include "screen.h"
 
 void init_screen() {
-    system("clear");
-
-    initscr();
-
-    // Assign the numbers of rows and columns to 'screen.rows' and 'screen.cols'.
-    getmaxyx(stdscr, screen.rows , screen.cols);
-
-    cbreak();
-
-    // Enables reading of arrow keys, F1, F2, etc.
-    keypad(stdscr, TRUE);
-
-    // Stops characters being echoed when typed.
-    noecho();
-
-    // Makes the cursor invisible.
-    curs_set(0);
-
     // Draw the outer borders of the screen.
     for (int i = 0; i < screen.rows; i++) {
         for (int j = 0; j < screen.cols; j++) {
@@ -36,6 +18,4 @@ void init_screen() {
     }
 }
 
-void terminate_screen() {
-    endwin();
-}
+void terminate_screen() {}
